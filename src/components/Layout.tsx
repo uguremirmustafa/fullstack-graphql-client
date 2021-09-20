@@ -10,7 +10,7 @@ export const Layout = ({ children }: Props) => {
   return (
     <Box>
       <Navbar />
-      <Box as="main" maxW="800px" mx="auto" w="full" px="4">
+      <Box as="main" maxW="800px" mx="auto" w="full" px="4" pb="4">
         {children}
       </Box>
     </Box>

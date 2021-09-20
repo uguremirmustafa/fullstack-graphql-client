@@ -1,5 +1,5 @@
 import { dedupExchange, Exchange, fetchExchange, Query, stringifyVariables } from 'urql';
-import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
 import {
   LogoutMutation,
   MeQuery,
@@ -66,13 +66,22 @@ const cursorPagination = (): Resolver => {
   };
 };
 
+const invalideAllPosts = (cache: Cache) => {
+  const allFields = cache.inspectFields('Query');
+  const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
+  fieldInfos.forEach((fi) => {
+    cache.invalidate('Query', 'posts', fi.arguments || {});
+  });
+};
+
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   // if (isServer()) {
   //   console.log(ctx.req.headers.cookie);
   // }
 
   return {
-    url: 'http://localhost:4000/graphql',
+    // url: 'http://localhost:4000/graphql',
+    url: 'https://devugur-graphql.herokuapp.com/graphql',
     fetchOptions: { credentials: 'include' as const },
     exchanges: [
       dedupExchange,
@@ -123,11 +132,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
               }
             },
             createPost: (_result, args, cache, info) => {
-              const allFields = cache.inspectFields('Query');
-              const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
-              fieldInfos.forEach((fi) => {
-                cache.invalidate('Query', 'posts', fi.arguments || {});
-              });
+              invalideAllPosts(cache);
             },
             logout: (_result, args, cache, info) => {
               betterUpdateQuery<LogoutMutation, MeQuery>(
@@ -152,6 +157,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                   }
                 }
               );
+              invalideAllPosts(cache);
             },
             register: (_result, args, cache, info) => {
               betterUpdateQuery<RegisterMutation, MeQuery>(
